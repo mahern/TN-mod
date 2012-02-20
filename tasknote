@@ -2,7 +2,8 @@
 
 ###############################################################################
 # tasknote - associate note file with individual tasks in taskwarrior
-# 
+# http://taskwarrior.org/projects/1/wiki/Tasknote
+#
 # Copyright 2011, Alan Bowen, bowen@tcnj.edu.
 # All rights reserved.
 #
@@ -32,28 +33,31 @@
 #
 ###############################################################################
 
-EDITOR=vim
+EDITOR=sensible-editor
 TASKBIN=task
 
 # If you sync tasks FOLDER should be a location that syncs and is available to
 # other computers, i.e. /users/dropbox/tasknotes
 # FOLDER to store notes in, must already exist!
-FOLDER="/users/dropbox/taskwarrior/tasknotes/"
+# FOLDER="/users/dropbox/taskwarrior/tasknotes/"
+# -for local mahern
+FOLDER="${HOME}/Dropbox/.task/notes/"
 
 # Preferred extension for tasknotes
 EXT=".txt"
 
 # Message that gets annotated to the task to indicate that notes exist
-NOTEMSG="Notes"
+# -for local
+NOTEMSG="Notes TN"
 
 # Display usage if task number not supplied on cli
 if [ $# != 1 ]; then
-	echo "Usage: $0 <id>"
+	echo "TaskNote 2.x Usage: $0 <id>"
 	exit 1
 fi
 
-#find UUID from given task
-uuid=`$TASKBIN rc._forcecolor=no rc.defaultwidth=300 $* | grep UUID | grep -o "[-a-f0-9]*\$"`
+# Find UUID from given task
+uuid=$($TASKBIN rc._forcecolor=no rc.defaultwidth=300 $* information | grep UUID | grep -o "[-a-f0-9]*\$")
 
 # build full path & file name to store notes in
 file="$FOLDER$uuid$EXT"
@@ -62,6 +66,12 @@ file="$FOLDER$uuid$EXT"
 fileexists=0
 if [ -f $file ]; then
   fileexists=1
+else
+  head=$($TASKBIN  all | head -n 2 | tail -n 1)
+  text=$($TASKBIN  all | grep ^$*)
+  echo "# ${head}" > $file
+  echo "# ${text}" >> $file
+  echo "[----------------------------------------------------------------------]" >> $file
 fi
 
 #create/edit $file with editor
